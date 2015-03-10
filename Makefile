@@ -2,10 +2,10 @@ DIRS = lib cat
 
 all:
 	for dir in $(DIRS); do \
-		$(MAKE) -C $$dir clean; \
+		$(MAKE) -C $$dir; \
 	done
 
 clean:
 	for dir in $(DIRS); do \
-		$(MAKE) -C $$dir; \
+		$(MAKE) -C $$dir clean; \
 	done	
