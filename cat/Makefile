@@ -12,3 +12,4 @@ libhelpers.so:
 
 cat: libhelpers.so
 	$(CC) $(CFLAGS) -o $@ $@.c -I$(DEPENDENCIES) -L$(DEPENDENCIES) -lhelpers
+
