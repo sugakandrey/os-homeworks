@@ -1,5 +1,6 @@
 #include "helpers.h"
 #include "errno.h"
+#include <stdio.h>
 
 ssize_t read_(int d, void *buf, size_t nbyte) {
   size_t total_bytes_read = 0;
@@ -33,4 +34,20 @@ ssize_t write_(int d, const void *buf, size_t nbyte) {
     return -1;
   }
   return total_bytes_written;
+}
+
+ssize_t read_until(int d, void *buf, size_t nbyte, char delimiter) {
+  size_t total_bytes_read = 0;
+  ssize_t bytes_read;
+  while (total_bytes_read < nbyte) {
+    bytes_read = read(d, (char *)buf + total_bytes_read, 1);
+    if (bytes_read == -1) {
+      return -1;
+    } if (bytes_read == 0) {
+      return total_bytes_read;
+    } if (((char *)buf)[total_bytes_read++] == delimiter) {
+      return total_bytes_read;
+    }
+  }
+  return total_bytes_read;
 }
