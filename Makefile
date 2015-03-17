@@ -1,4 +1,4 @@
-DIRS = lib cat
+DIRS = lib cat revwords
 
 all:
 	for dir in $(DIRS); do \

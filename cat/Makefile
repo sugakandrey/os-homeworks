@@ -1,15 +1,14 @@
 CFLAGS = -Wall -Werror -std=c99
-DEPENDANCIES = ../lib
+DEPENDENCIES = ../lib
 
 all: libhelpers.so cat
 
 clean:
-	$(MAKE) -C $(DEPENDANCIES) clean
+	$(MAKE) -C $(DEPENDENCIES) clean
 	rm -f cat
 
 libhelpers.so:
-	$(MAKE) -C $(DEPENDANCIES)
+	$(MAKE) -C $(DEPENDENCIES)
 
 cat: libhelpers.so
-	$(CC) $(CLFAGS) -o $@ $@.c -I$(DEPENDANCIES) -L$(DEPENDANCIES) -Wl,-rpath $(DEPENDANCIES) -lhelpers
-
+	$(CC) $(CFLAGS) -o $@ $@.c -I$(DEPENDENCIES) -L$(DEPENDENCIES) -lhelpers
