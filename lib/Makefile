@@ -4,7 +4,7 @@ all: libhelpers.so libbufio.so
 
 clean:
 	rm -f *.o
-	rm -f *.dylib
+	rm -f *.so
 
 libhelpers.so: helpers.o
 	$(CC) -shared -o libhelpers.so helpers.o
