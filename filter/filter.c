@@ -28,6 +28,7 @@ int main(int argc, char * argv[]) {
     }
     int delimiter_found = (buf[bytes_read - 1] == DELIMITER);
     strncpy(input_str, buf, bytes_read - delimiter_found + 1);
+    input_str[bytes_read] = '\0';
     buf[bytes_read - delimiter_found] = '\0';
     if (spawn(file, args) == 0) {
       ssize_t bytes_written = write_(STDOUT_FILENO, input_str, bytes_read - delimiter_found + 1);
