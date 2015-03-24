@@ -11,4 +11,4 @@ libhelpers.so:
 	$(MAKE) -C $(DEPENDENCIES)
 
 filter: libhelpers.so
-	$(CC) $(CFLAGS) -o $@ $@.c -I$(DEPENDENCIES) -L$(DEPENDENCIES) -lhelpers
+	$(CC) $(CFLAGS) -o $@ $@.c -I$(DEPENDENCIES) -L$(DEPENDENCIES) -Wl,-rpath=$(DEPENDENCIES) -lhelpers
