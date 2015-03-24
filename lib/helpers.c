@@ -1,6 +1,8 @@
 #include "helpers.h"
-#include "errno.h"
 #include <stdio.h>
+#include <unistd.h>
+#include <sys/wait.h>
+#include <fcntl.h>
 
 ssize_t read_(int d, void *buf, size_t nbyte) {
   size_t total_bytes_read = 0;
@@ -50,4 +52,24 @@ ssize_t read_until(int d, void *buf, size_t nbyte, char delimiter) {
     }
   }
   return total_bytes_read;
+}
+
+int spawn(const char * file, char * const argv []) {
+  pid_t process_id = fork();
+  if (process_id == 0) {
+    int devfd = open("/dev/null", O_WRONLY);
+    dup2(devfd, STDOUT_FILENO);
+    dup2(devfd, STDERR_FILENO);
+    close(devfd);
+    return execvp(file, argv);
+  } else if (process_id > 0) {
+    int exit_status;
+    waitpid(process_id, &exit_status, 0);
+    if (WIFEXITED(exit_status)) {
+      return WEXITSTATUS(exit_status);
+    } else {
+      return -1;
+    }
+  }
+  return -1;
 }

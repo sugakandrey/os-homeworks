@@ -7,5 +7,6 @@
 ssize_t read_(int d, void *buf, size_t nbyte);
 ssize_t write_(int d, const void *buf, size_t nbyte);
 ssize_t read_until(int d, void *buf, size_t nbyte, char delimiter);
+int spawn(const char * file, char * const argv []);
 
 #endif
