@@ -1,4 +1,4 @@
-DIRS = lib cat revwords
+DIRS = lib cat revwords lenwords filter
 
 all:
 	for dir in $(DIRS); do \
