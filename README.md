@@ -1,13 +1,3 @@
-
-<?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-    <head>
-        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-        <link rel="stylesheet" type="text/css" href="style.css">
-        <title>ОС</title>
-    </head>
-    <body>
 <h1 id="формат-сдачи-заданий">Формат сдачи заданий</h1>
 <ul>
 <li>У каждого студента есть свой <code>git</code> или <code>hg</code> репозиторий, в котором будет вестись работа над домашними заданиями. Зарегистрировать репозиторий можно по ссылке <a href="http://goo.gl/forms/JOlo6v5qO2">http://goo.gl/forms/JOlo6v5qO2</a>.</li>
