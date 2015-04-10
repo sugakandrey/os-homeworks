@@ -7,10 +7,10 @@ clean:
 	rm -f *.dylib
 
 libhelpers.so: helpers.o
-	$(CC) -shared -o libhelpers.so helpers.o
+	$(CC) -dynamiclib -install_name '$(CURDIR)/libhelpers.dylib' -o libhelpers.dylib helpers.o
 
 libbufio.so: bufio.o
-	$(CC) -shared -o libbufio.so bufio.o
+	$(CC) -dynamiclib -install_name '$(CURDIR)/libbufio.dylib' -o libbufio.dylib bufio.o
 
 helpers.o: 
 	$(CC) $(CFLAGS) -c -fPIC helpers.c
