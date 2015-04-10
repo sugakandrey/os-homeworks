@@ -4,16 +4,14 @@
 #include <unistd.h>
 #include <string.h>
 
-typedef struct buf_t Buffer;
-
 #ifdef DEBUG
 #define ASSERT(cond) if (!(cond)) abort();
 #else
 #define ASSERT(buf)
 #endif
 
-Buffer* buf_new(size_t capacity) {
-  Buffer* buf = malloc(sizeof(Buffer));
+buf_t* buf_new(size_t capacity) {
+  buf_t* buf = malloc(sizeof(buf_t));
   if (buf == NULL) {
     return NULL;
   }
@@ -27,24 +25,25 @@ Buffer* buf_new(size_t capacity) {
   return buf;
 }
 
-void buf_free(Buffer* buf) {
+void buf_free(buf_t* buf) {
   ASSERT(buf != NULL);
   free(buf->data);
   free(buf);
 }
 
-size_t buf_capacity(Buffer* buf) {
+size_t buf_capacity(buf_t* buf) {
   ASSERT(buf != NULL)
     return buf->capacity;
 }
 
-size_t buf_size(Buffer* buf) {
+size_t buf_size(buf_t* buf) {
   ASSERT(buf != null);
   return buf->size;
 }
 
-ssize_t buf_fill(fd_t fd, Buffer* buf, size_t required) {
-  ASSERT(buf != NULL && required <= buf->size);
+ssize_t buf_fill(fd_t fd, buf_t* buf, size_t required) {
+  ASSERT(buf != NULL);
+  ASSERT(required <= buf->size);
   ssize_t bytes_read;
   while (buf->size < required) {
     bytes_read = read(fd, buf->data + buf->size, buf->capacity - buf->size);
@@ -58,7 +57,7 @@ ssize_t buf_fill(fd_t fd, Buffer* buf, size_t required) {
   return buf->size;
 }
 
-ssize_t buf_flush(fd_t fd, Buffer* buf, size_t required) {
+ssize_t buf_flush(fd_t fd, buf_t* buf, size_t required) {
   ASSERT(buf != NULL);
   size_t total_bytes_written = 0;
   while (buf->size > total_bytes_written && total_bytes_written < required) {
@@ -73,4 +72,41 @@ ssize_t buf_flush(fd_t fd, Buffer* buf, size_t required) {
     memcpy(buf->data, buf->data + total_bytes_written, buf->size - total_bytes_written);
   }
   return total_bytes_written;
+}
+
+size_t find_newline(buf_t* buf, char* dest) {
+  ASSERT(buf != null);
+  for (size_t i = 0; i < buf->size; i++) {
+    if (buf->data[i] == '\n') {
+      buf->data[i] = '\0';
+      memcpy(dest, buf->data, i + 1);
+      memcpy(buf->data, buf->data + i + 1, buf->size - i - 1);
+      return i;
+    }
+  }
+  return 0;
+}
+
+ssize_t buf_getline(fd_t fd, buf_t* buf, char* dest) {
+  ASSERT(buf != NULL);
+  size_t found = find_newline(buf, dest);
+  if (found) {
+    buf->size -= found + 1;
+    return found;
+  }
+  while (buf->size <= buf->capacity) {
+    size_t init_size = buf->size;
+    ssize_t filled = buf_fill(fd, buf, init_size + 1);
+    if (filled == -1) {
+      return -1;
+    } else if (filled == init_size) {
+      return 0;
+    }
+    size_t len = find_newline(buf, dest);
+    if (len) {
+      buf->size -= len + 1;
+      return len;
+    }
+  }
+  return 0;
 }

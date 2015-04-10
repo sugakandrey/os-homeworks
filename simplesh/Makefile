@@ -1,4 +1,4 @@
-CFLAGS =-Wall -Werror -std=c99
+CFLAGS =-Wall -std=c99
 DEPENDENCIES = ../lib
 
 all: libhelpers.so simplesh
@@ -11,4 +11,4 @@ libhelpers.so:
 	$(MAKE) -C $(DEPENDENCIES)
 
 simplesh: libhelpers.so
-	$(CC) $(CFLAGS) -o $@ $@.c -I$(DEPENDENCIES) -L$(DEPENDENCIES) -lhelpers
+	$(CC) $(CFLAGS) -o $@ $@.c -I$(DEPENDENCIES) -L$(DEPENDENCIES) -lhelpers -lbufio
