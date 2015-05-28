@@ -11,5 +11,5 @@ libbufio.so:
 	$(MAKE) -C $(DEPENDENCIES)
 
 bufcat: libbufio.so
-	$(CC) $(CFLAGS) -o $@ $@.c -I$(DEPENDENCIES) -L$(DEPENDENCIES) -lbufio
+	$(CC) $(CFLAGS) -o $@ $@.c -I$(DEPENDENCIES) -L$(DEPENDENCIES) -Wl,-rpath=$(DEPENDENCIES) -lbufio
 
