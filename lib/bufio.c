@@ -54,7 +54,7 @@ ssize_t buf_fill(fd_t fd, Buffer* buf, size_t required) {
       break;
     }
     buf->size += bytes_read;
-  } 
+  }
   return buf->size;
 }
 
@@ -74,4 +74,3 @@ ssize_t buf_flush(fd_t fd, Buffer* buf, size_t required) {
   }
   return total_bytes_written;
 }
-
