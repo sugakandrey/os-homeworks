@@ -5,11 +5,11 @@ all: libhelpers.so libbufio.so
 
 clean:
 	rm -f *.o
-	rm -f *.dylib
+	rm -f *.so
 
 ifeq ($(OS), Darwin)
 libhelpers.so: helpers.o
-	$(CC) -dynamiclib -install_name '$(CURDIR)/libhelpers.dylib' -o libhelpers.dylib helpers.o
+	$(CC) -shared -o libhelpers.so helpers.o
 
 libbufio.so: bufio.o
 	$(CC) -dynamiclib -install_name '$(CURDIR)/libbufio.dylib' -o libbufio.dylib bufio.o

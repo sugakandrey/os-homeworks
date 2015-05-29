@@ -1,6 +1,7 @@
 #ifndef _HELPERS_
 #define _HELPERS_
 
+#define _XOPEN_SOURCE
 #include <unistd.h>
 #include <stddef.h>
 

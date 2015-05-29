@@ -1,15 +1,15 @@
-CFLAGS = -Wall -std=c99
+CFLAGS = -Wall -std=gnu99
 DEPENDENCIES = ../lib
 OS:=$(shell uname)
 
 all: lib.so simplesh
 
 clean:
-		$(MAKE) -C $(DEPENDENCIES) clean
-			rm -f simplesh
+	$(MAKE) -C $(DEPENDENCIES) clean
+	rm -f simplesh
 
 lib.so:
-		$(MAKE) -C $(DEPENDENCIES)
+	$(MAKE) -C $(DEPENDENCIES)
 
 ifeq ($(OS), Linux)
 simplesh: lib.so
