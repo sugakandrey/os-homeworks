@@ -1,4 +1,4 @@
-CFLAGS = -Wall -Werror -std=c99
+CFLAGS = -Wall  -std=c99
 
 all: libhelpers.so libbufio.so
 
@@ -7,13 +7,13 @@ clean:
 	rm -f *.dylib
 
 libhelpers.so: helpers.o
-	$(CC) -dynamiclib -install_name '$(CURDIR)/libhelpers.dylib' -o libhelpers.dylib helpers.o
+	$(CC) -shared -o libhelpers.so helpers.o
 
 libbufio.so: bufio.o
-	$(CC) -dynamiclib -install_name '$(CURDIR)/libbufio.dylib' -o libbufio.dylib bufio.o
+	$(CC) -shared -o libbufio.so bufio.o
 
-helpers.o: 
+helpers.o:
 	$(CC) $(CFLAGS) -c -fPIC helpers.c
-
-bufio.o: 
+	
+bufio.o:
 	$(CC) $(CFLAGS) -c -fPIC bufio.c
