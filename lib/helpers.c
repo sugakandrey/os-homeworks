@@ -157,24 +157,24 @@ int runpiped(execargs_t** programs, size_t n) {
   process_count = n;
 
   for (size_t i = 0; i < n - 1; i++) {
-    if (pipe2(pipesfd[i], O_CLOEXEC)) {
+    if (pipe2(pipesfd[i], O_CLOEXEC) == -1) {
       report_error_and_exit("pipe2 failed");
     }
   }
   for (size_t i = 0; i < n; i++) {
     procs[i] = fork();
-    if (procs[i] == -1) {
-      report_error_and_exit("fork failed");
-    }
     if (procs[i] == 0) {
       if (i != 0) {
         dup2(pipesfd[i - 1][0], STDIN_FILENO);
       }
       if (i != n - 1) {
         dup2(pipesfd[i][1], STDOUT_FILENO);
-        execvp(programs[i]->file, programs[i]->args);
-        _report_error_and_exit("execvp failed");
       }
+      execvp(programs[i]->file, programs[i]->args);
+      _report_error_and_exit("execvp failed");
+    }
+    if (procs[i] == -1) {
+      report_error_and_exit("fork failed");
     }
   }
   for (size_t i = 0; i < n; i++) {
