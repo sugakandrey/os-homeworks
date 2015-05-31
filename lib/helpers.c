@@ -177,13 +177,14 @@ int runpiped(execargs_t** programs, size_t n) {
       report_error_and_exit("fork failed");
     }
   }
-  for (size_t i = 0; i < n; i++) {
+  for (size_t i = 0; i < n - 1; i++) {
     close(pipesfd[i][1]);
     close(pipesfd[i][0]);
   }
   process = procs;
 
   struct sigaction sig_act;
+  memset(&sig_act, '\0', sizeof(sig_act));
   sig_act.sa_handler = handler;
   sig_act.sa_flags = 0;
   sigemptyset(&sig_act.sa_mask);

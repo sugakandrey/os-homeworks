@@ -11,7 +11,7 @@ const char SPACE = ' ';
 static execargs_t** programs;
 
 void sig_handler(int signal) {
-  write_(STDOUT_FILENO, "\n$", 2);
+  write_(STDOUT_FILENO, "\n", 1);
 }
 
 int is_delimiter(char c) {
@@ -47,8 +47,14 @@ execargs_t* parse_command(const char* buf, const int from, const int to) {
   return execargs_new(args[0], args, args_count);
 }
 
+void a(int sig) {}
+
 int main(void) {
-  signal(SIGINT, &sig_handler);
+  struct sigaction sig_act;
+  memset(&sig_act, '\0', sizeof(sig_act));
+  sig_act.sa_handler = &sig_handler;
+  sigaction(SIGINT, &sig_act, NULL);
+
   char buf[BUFFER_SIZE];
   buf_t* reader_buf = buf_new(BUFFER_SIZE);
   while (1) {
@@ -57,7 +63,7 @@ int main(void) {
     }
     ssize_t line_len = buf_getline(STDIN_FILENO, reader_buf, buf);
     if (line_len == -1) {
-      return EXIT_FAILURE;
+      continue;
     } else if (line_len == 0) {
       return EXIT_SUCCESS;
     }
@@ -79,7 +85,6 @@ int main(void) {
       }
     }
     runpiped(programs, programs_count);
-    return 1;
   }
   for (execargs_t** it = programs; *it; it++) {
     execargs_free(*it);
