@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include "helpers.h"
 #include <sys/types.h>
 #include <signal.h>
@@ -98,8 +99,21 @@ void execargs_free(execargs_t* args) {
   free(args);
 }
 
+
+static int process_count;
+static int* process;
+static struct sigaction old;
+
+void kill_procs(void) {
+  for (int i = 0; i < process_count; i++) {
+    kill(process[i], SIGKILL);
+  }
+  process_count = 0;
+}
+
 void report_error_and_exit_helper(const char* message, void (*exit_function)(int)) {
   fprintf(stderr, "Error: %s, errno: %s\n", message, strerror(errno));
+  kill_procs();
   exit_function(EXIT_FAILURE);
 }
 
@@ -110,11 +124,6 @@ void report_error_and_exit(const char* message) {
 void _report_error_and_exit(const char* message) {
   report_error_and_exit_helper(message, _exit);
 }
-
-static int stdin_orig;
-static int stdout_orig;
-static int current_process;
-static struct sigaction old;
 
 void redirect(int fd_old, int fd_new) {
   if (fd_old != fd_new) {
@@ -137,52 +146,55 @@ int exec_redirected(execargs_t* program, int in_fd, int out_fd) {
 }
 
 void handler(int signal) {
-  if (signal == SIGINT) {
-    if (current_process) {
-      kill(current_process, SIGKILL);
-      waitpid(current_process, NULL, 0);
-    }
-  }
+  kill_procs();
+  sigaction(SIGINT, &old, NULL);
 }
 
 int runpiped(execargs_t** programs, size_t n) {
-  stdin_orig = dup(STDIN_FILENO);
-  stdout_orig = dup(STDOUT_FILENO);
+  int pipesfd[n - 1][2];
+  int procs[n];
+  memset(procs, -1, n);
+  process_count = n;
+
+  for (size_t i = 0; i < n - 1; i++) {
+    if (pipe2(pipesfd[i], O_CLOEXEC)) {
+      report_error_and_exit("pipe2 failed");
+    }
+  }
+  for (size_t i = 0; i < n; i++) {
+    procs[i] = fork();
+    if (procs[i] == -1) {
+      report_error_and_exit("fork failed");
+    }
+    if (procs[i] == 0) {
+      if (i != 0) {
+        dup2(pipesfd[i - 1][0], STDIN_FILENO);
+      }
+      if (i != n - 1) {
+        dup2(pipesfd[i][1], STDOUT_FILENO);
+        execvp(programs[i]->file, programs[i]->args);
+        _report_error_and_exit("execvp failed");
+      }
+    }
+  }
+  for (size_t i = 0; i < n; i++) {
+    close(pipesfd[i][1]);
+    close(pipesfd[i][0]);
+  }
+  process = procs;
 
   struct sigaction sig_act;
   sig_act.sa_handler = handler;
   sig_act.sa_flags = 0;
   sigemptyset(&sig_act.sa_mask);
-  sigaction(SIGINT, &sig_act, &old);
-
-  size_t i = 0;
-  int in = STDIN_FILENO;
-  for (; i < n - 1; i++) {
-    int pipefd[2];
-    if (pipe(pipefd) == -1) {
-      report_error_and_exit("pipe failed");
-    }
-    pid_t pid;
-    pid = fork();
-    if (pid == -1) {
-      report_error_and_exit("fork failed");
-    } else if (pid == 0) {
-      close(pipefd[0]);
-      exit(exec_redirected(programs[i], in, pipefd[1]));
-    } else {
-      int status;
-      current_process = pid;
-      close(pipefd[1]);
-      close(in);
-      in = pipefd[0];
-      waitpid(pid, &status, 0);
-      if (!WIFEXITED(status)) {
-        return EXIT_FAILURE;
-      }
-    }
+  if (sigaction(SIGINT, &sig_act, &old) == -1) {
+    report_error_and_exit("sigaction failed");
   }
-  int res = exec_redirected(programs[i], in, STDOUT_FILENO);
-  current_process = 0;
-  dup2(stdin_orig, STDIN_FILENO);
-  return res;
+  for (size_t i = 0; i < n; i++) {
+    int exit_status;
+    waitpid(process[i], &exit_status, 0);
+  }
+  process_count = 0;
+  sigaction(SIGINT, &old, NULL);
+  return 0;
 }

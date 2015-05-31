@@ -48,7 +48,7 @@ execargs_t* parse_command(const char* buf, const int from, const int to) {
 }
 
 int main(void) {
-  signal(SIGINT, sig_handler);
+  signal(SIGINT, &sig_handler);
   char buf[BUFFER_SIZE];
   buf_t* reader_buf = buf_new(BUFFER_SIZE);
   while (1) {
@@ -79,6 +79,7 @@ int main(void) {
       }
     }
     runpiped(programs, programs_count);
+    return 1;
   }
   for (execargs_t** it = programs; *it; it++) {
     execargs_free(*it);
