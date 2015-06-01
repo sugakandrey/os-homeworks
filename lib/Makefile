@@ -1,4 +1,4 @@
-CFLAGS = -Wall -Werror -std=c99
+CFLAGS = -Wall -Werror -std=gnu99
 OS:=$(shell uname)
 
 all: libhelpers.so libbufio.so
