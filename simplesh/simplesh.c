@@ -1,6 +1,6 @@
 #include "helpers.h"
-#include <stdio.h>
 #include <string.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
 #include "bufio.h"
@@ -38,9 +38,8 @@ execargs_t* parse_command(const char* buf, const int from, const int to) {
     if (!is_delimiter(buf[i]) && is_delimiter(buf[i + 1])) {
       end = i + 1;
       args[index++] = strndup(buf + start, end - start);
-      i++;
-      while (is_delimiter(buf[i])) i++;
-      start = i;
+      while (is_delimiter(buf[i + 1])) i++;
+      start = i + 1;
     }
   }
   args[args_count] = NULL;
