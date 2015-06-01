@@ -138,7 +138,7 @@ int runpiped(execargs_t** programs, size_t n) {
   int pipesfd[n - 1][2];
   int procs[n];
   memset(procs, -1, n);
-  process_count = n;
+  process_count = 0;
 
   for (size_t i = 0; i < n - 1; i++) {
     if (pipe2(pipesfd[i], O_CLOEXEC) == -1) {
@@ -166,6 +166,7 @@ int runpiped(execargs_t** programs, size_t n) {
     close(pipesfd[i][0]);
   }
   process = procs;
+  process_count = n;
 
   struct sigaction sig_act;
   memset(&sig_act, '\0', sizeof(sig_act));
