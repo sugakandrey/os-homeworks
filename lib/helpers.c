@@ -125,24 +125,8 @@ void _report_error_and_exit(const char* message) {
   report_error_and_exit_helper(message, _exit);
 }
 
-void redirect(int fd_old, int fd_new) {
-  if (fd_old != fd_new) {
-    if (dup2(fd_old, fd_new) != -1) {
-      close(fd_old);
-    } else {
-      _report_error_and_exit("dup2 failed");
-    }
-  }
-}
-
 int exec(execargs_t* args) {
   return spawn(args->file, args->args);
-}
-
-int exec_redirected(execargs_t* program, int in_fd, int out_fd) {
-  redirect(in_fd, STDIN_FILENO);
-  redirect(out_fd, STDOUT_FILENO);
-  return exec(program);
 }
 
 void handler(int signal) {
@@ -186,8 +170,6 @@ int runpiped(execargs_t** programs, size_t n) {
   struct sigaction sig_act;
   memset(&sig_act, '\0', sizeof(sig_act));
   sig_act.sa_handler = handler;
-  sig_act.sa_flags = 0;
-  sigemptyset(&sig_act.sa_mask);
   if (sigaction(SIGINT, &sig_act, &old) == -1) {
     report_error_and_exit("sigaction failed");
   }
