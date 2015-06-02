@@ -16,7 +16,7 @@ const size_t BUFFER_SIZE = 8192;
 const size_t CONNECTIONS_LIMIT = 128;
 
 static void print_usage() {
-  write_(STDOUT_FILENO, "Usage: ./bipiper %from_port% %to_port%\n", 39);
+  write_(STDOUT_FILENO, "Usage: ./forking %from_port% %to_port%\n", 39);
 }
 
 void get_info(const char* serv_name, addrinfo** res, addrinfo* hints) {
@@ -27,7 +27,7 @@ void get_info(const char* serv_name, addrinfo** res, addrinfo* hints) {
 
 void open_socket(int* sock, addrinfo* localhost_info) {
   for (addrinfo* info = localhost_info; info; info = info->ai_next) {
-    *sock = socket(info->ai_family, info->ai_socktype | SOCK_NONBLOCK, info->ai_protocol);
+    *sock = socket(info->ai_family, info->ai_socktype, info->ai_protocol);
     if (*sock == -1) continue;
     int bind_res = bind(*sock, info->ai_addr, info->ai_addrlen);
     if (!bind_res) break;
@@ -88,11 +88,11 @@ int main(int argc, char** argv) {
   server_fds[0] = init_server(argv[1]);
   server_fds[1] = init_server(argv[2]);
   while(1) {
-    int client_fd1 = accept4(server_fds[0], NULL, NULL, SOCK_NONBLOCK);
+    int client_fd1 = accept(server_fds[0], NULL, NULL);
     if (client_fd1 == -1) {
       report_error_and_exit("accept failed on first socket");
     }
-    int client_fd2 = accept4(server_fds[1], NULL, NULL, SOCK_NONBLOCK);
+    int client_fd2 = accept(server_fds[1], NULL, NULL);
     if (client_fd2 == -1) {
       report_error_and_exit("accept failed on second socket");
     }
@@ -112,7 +112,7 @@ int main(int argc, char** argv) {
     if (pid2 == -1) {
       kill(pid, SIGKILL);
       report_error_and_exit("second fork failed");
-    } else if (!pid) {
+    } else if (!pid2) {
       close(server_fds[0]);
       close(server_fds[1]);
       _connect(client_fd2, client_fd1);

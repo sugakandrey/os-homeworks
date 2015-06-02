@@ -13,6 +13,9 @@ typedef struct execargs_t {
 
 execargs_t* execargs_new(char* file, char** args, size_t n);
 void execargs_free(execargs_t* args);
+void report_error_and_exit(const char* message);
+void _report_error_and_exit(const char* message);
+
 
 ssize_t read_(int d, void* buf, size_t nbyte);
 ssize_t write_(int d, const void* buf, size_t nbyte);
