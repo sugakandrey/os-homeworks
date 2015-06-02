@@ -1,4 +1,4 @@
-DIRS = lib cat revwords lenwords filter bufcat simplesh
+DIRS = lib cat revwords lenwords filter bufcat simplesh filesender bipiper
 
 all:
 	for dir in $(DIRS); do \
