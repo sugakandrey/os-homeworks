@@ -33,7 +33,7 @@ static void print_usage() {
 }
 
 void get_info(const char* serv_name, addrinfo** res, addrinfo* hints) {
-  TRY(getaddrinfo("localhost", serv_name, hints, res), "getaddrinfo failed");
+  TRY(getaddrinfo("0.0.0.0", serv_name, hints, res), "getaddrinfo failed");
 }
 
 void open_socket(int* sock, addrinfo* localhost_info) {
@@ -69,6 +69,7 @@ size_t current_size = 2;
 
 void _accept(int socket, int* fd) {
   *fd = accept(pollfds[socket].fd, NULL, NULL);
+  printf("accepting client %zu with fd %d\n", current_size, *fd);
   pollfds[socket].events = 0;
   pollfds[socket ^ 1].events = POLLIN;
   server_state ^= 1;
@@ -76,9 +77,22 @@ void _accept(int socket, int* fd) {
 
 #define swap(TYPE, A, B) { TYPE tmp = A; A = B; B = tmp; }
 
+void flush(int i) {
+  if (buffers[i]->size > 0) {
+    while (1) {
+      ssize_t flushed = buf_flush(pollfds[i ^ 1].fd, buffers[i], 1);
+      if (!flushed || flushed == -1) break;
+    }
+  }
+}
+
 void close_pair(int i) {
-  printf("i = %d\n", i);
+  printf("closing pair %d\n", i);
   pollfds[0].events |= POLLIN;
+  flush(i);
+  flush(i ^ 1);
+  memset(buffers[i]->data, 0, BUFFER_SIZE);
+  memset(buffers[i ^ 1]->data, 0, BUFFER_SIZE);
   close(pollfds[i].fd);
   close(pollfds[i ^ 1].fd);
   if (buffers[i]) {
@@ -89,6 +103,8 @@ void close_pair(int i) {
     buf_free(buffers[i ^ 1]);
     buffers[i ^ 1] = NULL;
   }
+  connection_state[i] = 0;
+  connection_state[i ^ 1] = 0;
   i &= ~1;
   swap(buf_t*, buffers[i], buffers[current_size - 2]);
   swap(buf_t*, buffers[i + 1], buffers[current_size - 1]);
@@ -127,17 +143,21 @@ int main(int argc, char** argv) {
     for (size_t i = 0; i < current_size; i++) {
       short revents = pollfds[i].revents;
       if (revents & POLLIN) {
-        if (i == 0) _accept(0, &client_fd1);
-        else if (i == 1) _accept(1, &client_fd2);
-        else {
+        if (i == 0) {
+          _accept(0, &client_fd1);
+        } else if (i == 1) {
+            _accept(1, &client_fd2);
+        } else {
           buf_t* buf = buffers[i];
           ssize_t old_size = buf->size;
           ssize_t filled = buf_fill(pollfds[i].fd, buf, 1);
+          printf("POLLIN on client %zu bytes_read = %ld\n", i, filled);
           if (filled == -1) {
             close_pair(i);
             continue;
           }
           if (filled == old_size) {
+            printf("filled == oldsize => terminated read end\n");
             shutdown(pollfds[i].fd, SHUT_RD);
             pollfds[i].events &= ~POLLIN;
             connection_state[i] = TERMINATED;
@@ -151,15 +171,10 @@ int main(int argc, char** argv) {
           }
         }
       }
-      if (revents & POLLHUP) {
-        connection_state[i] = TERMINATED;
-        if (connection_state[i ^ 1] & TERMINATED) {
-          close_pair(i);
-        }
-      }
       if (revents & POLLOUT) {
         buf_t* buf = buffers[i ^ 1];
         ssize_t flushed = buf_flush(pollfds[i].fd, buf, 1);
+        printf("POLLOUT on client %zu, bytes written = %ld\n", i, flushed);
         if (flushed == -1) {
           close_pair(i);
           continue;
@@ -168,7 +183,7 @@ int main(int argc, char** argv) {
           pollfds[i].events &= ~POLLOUT;
         }
         if (buf->size < buf->capacity) {
-          pollfds[i].events |= POLLIN;
+          pollfds[i ^ 1].events |= POLLIN;
         }
       }
       if (client_fd1 != -1 && client_fd2 != -1) {
