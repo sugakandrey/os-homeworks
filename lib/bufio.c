@@ -15,7 +15,7 @@ buf_t* buf_new(size_t capacity) {
   if (buf == NULL) {
     return NULL;
   }
-  buf->data = malloc(capacity);
+  buf->data = (char*) malloc(capacity);
   if (buf->data == NULL) {
     free(buf);
     return NULL;
@@ -32,8 +32,8 @@ void buf_free(buf_t* buf) {
 }
 
 size_t buf_capacity(buf_t* buf) {
-  ASSERT(buf != NULL)
-    return buf->capacity;
+  ASSERT(buf != NULL);
+  return buf->capacity;
 }
 
 size_t buf_size(buf_t* buf) {
@@ -69,7 +69,7 @@ ssize_t buf_flush(fd_t fd, buf_t* buf, size_t required) {
   }
   buf->size -= total_bytes_written;
   if (buf->size > 0) {
-    memcpy(buf->data, buf->data + total_bytes_written, buf->size - total_bytes_written);
+    memmove(buf->data, buf->data + total_bytes_written, buf->size - total_bytes_written);
   }
   return total_bytes_written;
 }

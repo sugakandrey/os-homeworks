@@ -134,6 +134,7 @@ int main(int argc, char** argv) {
   pollfds[1].fd = init_server(argv[2]);
   int client_fd1 = -1;
   int client_fd2 = -1;
+  ssize_t total = 0;
   while (1) {
     int poll_res = poll(pollfds, current_size, -1);
     if (poll_res == -1) {
@@ -152,14 +153,16 @@ int main(int argc, char** argv) {
           ssize_t old_size = buf->size;
           ssize_t filled = buf_fill(pollfds[i].fd, buf, 1);
           printf("POLLIN on client %zu bytes_read = %ld\n", i, filled);
+          total += filled;
           if (filled == -1) {
             close_pair(i);
             continue;
           }
           if (filled == old_size) {
             printf("filled == oldsize => terminated read end\n");
-            shutdown(pollfds[i].fd, SHUT_RD);
+            printf("total bytes send = %ld\n", total);
             pollfds[i].events &= ~POLLIN;
+            shutdown(pollfds[i].fd, SHUT_RD);
             connection_state[i] = TERMINATED;
             if (connection_state[i ^ 1] & TERMINATED) close_pair(i);
           }
