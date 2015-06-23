@@ -33,7 +33,7 @@ static void print_usage() {
 }
 
 void get_info(const char* serv_name, addrinfo** res, addrinfo* hints) {
-  TRY(getaddrinfo("0.0.0.0", serv_name, hints, res), "getaddrinfo failed");
+  TRY(getaddrinfo("10.0.2.15", serv_name, hints, res), "getaddrinfo failed");
 }
 
 void open_socket(int* sock, addrinfo* localhost_info) {
